@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Service } from './Service';
 
 function App() {
@@ -18,6 +19,14 @@ function App() {
     }
 
     fetchTenants();
+  }, []);
+
+
+  const isLessThanMonth = useCallback((date) => {
+    const monthAhead = dayjs().add(1, 'month');
+
+    const leaseIsBeforeOneMOnth = dayjs(date).isBefore(monthAhead) && dayjs(date).isAfter(dayjs());
+    return leaseIsBeforeOneMOnth;
   }, []);
 
   return (
@@ -59,39 +68,42 @@ function App() {
               </tr> */}
 
               { tab === 'tab1' ?
-                <tr>
-                <th>1</th>
-                <td>Mark Otto</td>
-                <td>CURRENT</td>
-                <td>12/31/2020</td>
-                <td>
-                  <button className="btn btn-danger">Delete</button>
-                </td>
-              </tr> : null
+                tenants.map((tenant) =>
+                <tr key={tenant.id}>
+                   <th>{tenant.id}</th>
+                   <td>{tenant.name}</td>
+                   <td>{tenant.paymentStatus}</td>
+                   <td>{tenant.leaseEndDate}</td>
+                   <td>
+                     <button className="btn btn-danger">Delete</button>
+                   </td>
+                 </tr>) : null
               }
 
               { tab === 'tab2' ?
-                <tr>
-                <th>2</th>
-                <td>Marcos Alonso</td>
-                <td>CURRENT</td>
-                <td>12/31/2020</td>
-                <td>
-                  <button className="btn btn-danger">Delete</button>
-                </td>
-              </tr> : null
+                tenants.filter(tenant => tenant.paymentStatus === 'LATE').map((tenant) =>
+                <tr key={tenant.id}>
+                   <th>{tenant.id}</th>
+                   <td>{tenant.name}</td>
+                   <td>{tenant.paymentStatus}</td>
+                   <td>{tenant.leaseEndDate}</td>
+                   <td>
+                     <button className="btn btn-danger">Delete</button>
+                   </td>
+                 </tr>) : null
               }
 
               { tab === 'tab3' ?
-                <tr>
-                <th>3</th>
-                <td>Julian antonio</td>
-                <td>CURRENT</td>
-                <td>12/31/2020</td>
-                <td>
-                  <button className="btn btn-danger">Delete</button>
-                </td>
-              </tr> : null
+                tenants.filter(tenant => isLessThanMonth(tenant.paymentStatus)).map((tenant) =>
+                <tr key={tenant.id}>
+                   <th>{tenant.id}</th>
+                   <td>{tenant.name}</td>
+                   <td>{tenant.paymentStatus}</td>
+                   <td>{tenant.leaseEndDate}</td>
+                   <td>
+                     <button className="btn btn-danger">Delete</button>
+                   </td>
+                 </tr>) : null
               }
             </tbody>
           </table>
