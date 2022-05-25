@@ -6,9 +6,35 @@ function App() {
 
   const [tab, setTab] = useState('tab1');
   const [tenants, setTenants] = useState([]);
+
+  // error and loading states
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+
+  // sorting
+  const [filters, setFilters] = useState({ sortBy: 'name', order: 'asc'})
+
+  function sortBy (option) {
+
+    if (filters.order === 'asc') {
+      // if asc then sort by desc
+      setTenants([...tenants.sort((a,b) => (a[option] < b[option]) ? 1 : ((b[option] < a[option]) ? -1 : 0))])
+      setFilters({ ...filters, order: 'desc'})
+    }
+
+    if (filters.order === 'desc') {
+      // if asc then sort by desc
+      setTenants([...tenants.sort((a,b) => (a[option] > b[option]) ? 1 : ((b[option] > a[option]) ? -1 : 0))])
+      setFilters({ ...filters, order: 'asc'})
+    }
+  }
+
+  function formatDate (date) {
+    const datef = dayjs(date, 'YYYY-MM-DDTHH:mm:ss')
+    return dayjs(datef).format('DD-MM-YYYY[ ]HH:mm:ss');
+
+  }
 
   useEffect(() => {
 
@@ -74,10 +100,10 @@ function App() {
           <table className="table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Payment Status</th>
-                <th>Lease End Date</th>
+                <th style={{ cursor: 'pointer'}} onClick={() => sortBy('id')}>#</th>
+                <th style={{ cursor: 'pointer' }} onClick={() => sortBy('name')}>Name</th>
+                <th style={{ cursor: 'pointer' }} onClick={() => sortBy('paymentStatus')}>Payment Status</th>
+                <th style={{ cursor: 'pointer' }} onClick={() => sortBy('leaseEndDate')}>Lease End Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -89,7 +115,7 @@ function App() {
                    <th>{tenant.id}</th>
                    <td>{tenant.name}</td>
                    <td>{tenant.paymentStatus}</td>
-                   <td>{tenant.leaseEndDate}</td>
+                   <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
                      <button className="btn btn-danger">Delete</button>
                    </td>
@@ -102,7 +128,7 @@ function App() {
                    <th>{tenant.id}</th>
                    <td>{tenant.name}</td>
                    <td>{tenant.paymentStatus}</td>
-                   <td>{tenant.leaseEndDate}</td>
+                   <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
                      <button className="btn btn-danger">Delete</button>
                    </td>
@@ -115,7 +141,7 @@ function App() {
                    <th>{tenant.id}</th>
                    <td>{tenant.name}</td>
                    <td>{tenant.paymentStatus}</td>
-                   <td>{tenant.leaseEndDate}</td>
+                   <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
                      <button className="btn btn-danger">Delete</button>
                    </td>
