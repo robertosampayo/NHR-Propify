@@ -20,10 +20,56 @@ function App() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Valid form
+  const [isValidForm, setValidForm] = useState({
+    name: false,
+    leaseEndDate: false,
+    paymentStatus: true,
+  
+  });
+
 
   // sorting
   const [filters, setFilters] = useState({ sortBy: 'name', order: 'asc'})
 
+
+
+    // fetch tenants
+    useEffect(() => {
+
+      const fetchTenants = async () => {
+  
+  
+  
+        try {
+          setLoading(true);
+          const data = await Service.getTenants();
+          setTenants(data);
+          setError(null);
+          setLoading(false);
+        } catch(error) {
+          setLoading(false);
+          setTenants([]);
+          console.error(error);
+          setError({ error : error, message: "There was an error loading the data, please reload the page.", type: 'get'});
+  
+          
+        }
+  
+      }
+  
+      fetchTenants();
+    }, []);
+  
+    // valid form
+    useEffect(() => {
+      const isValidDate = dayjs(leaseEndDate, 'DD-MM-YYYY', true).isValid();
+      setValidForm(prevState => { return { ...prevState, leaseEndDate: isValidDate }})
+  
+    }, [leaseEndDate])
+
+
+  // sorting
   function sortBy (option) {
 
     if (filters.order === 'asc') {
@@ -45,43 +91,16 @@ function App() {
 
   }
 
-  useEffect(() => {
-
-    const fetchTenants = async () => {
-
-
-
-      try {
-        setLoading(true);
-        const data = await Service.getTenants();
-        setTenants(data);
-        setError(null);
-        setLoading(false);
-      } catch(error) {
-        setLoading(false);
-        setTenants([]);
-        console.error(error);
-        setError({ error : error, message: "There was an error loading the data, please reload the page.", type: 'get'});
-
-        
-      }
-
-    }
-
-    fetchTenants();
-  }, []);
 
 
   const isLessThanMonth = useCallback((date) => {
     const monthAhead = dayjs().add(1, 'month');
 
-    const leaseIsBeforeOneMOnth = dayjs(date).isBefore(monthAhead) && dayjs(date).isAfter(dayjs());
-    return leaseIsBeforeOneMOnth;
+    const leaseIsBeforeOneMonth = dayjs(date).isBefore(monthAhead) && dayjs(date).isAfter(dayjs());
+    return leaseIsBeforeOneMonth;
   }, []);
 
-  if (error && error?.message && error?.type === 'get' && !loading) {
-    return <div><h2>{error.message}</h2></div>
-  }
+
 
 
   // form values
@@ -90,6 +109,7 @@ function App() {
     const name = e.target.value;
     if (name && name.length <= 25) {
       setName(name);
+      setValidForm(prevState => { return { ...prevState, name: name !== ""} })
     }
   }
 
@@ -98,6 +118,7 @@ function App() {
     const paymentStatus = e.target.value;
     if (paymentStatus) {
       setPaymentStatus(paymentStatus);
+      setValidForm(prevState => { return { ...prevState, paymentStatus: paymentStatus !== ""} })
     }
     
   }
@@ -173,19 +194,63 @@ function App() {
         console.error(error);
         setError({ error : error, message: "Could not delete the tenant, please try again.", type: 'delete'});
   
-        setTimeout(() => {
+       /*setTimeout(() => {
           setError(null);
-        }, 5000);
+        }, 5000);*/
       }
   
   
     }
 
+
+    // valid form
+
+    const enableSave = (form) => {
+      return form.name && form.leaseEndDate && form.paymentStatus
+    }
+
+    const isDisabled = !enableSave(isValidForm);
+
+
+    const styles = {
+      error: {
+        display: 'flex',
+        textAlign: 'center',
+        width: '100%',
+        margin: '0 auto',
+        justifyContent: 'center',
+        color: 'red',
+      },
+      errorData: {
+        display: 'flex',
+        textAlign: 'center',
+        width: '100%',
+        margin: '50px 0 0 0',
+        justifyContent: 'center',
+        color: 'red',
+      },
+      h3: {
+        fontSize: '18px',
+      },
+      loading: {
+        display: 'flex',
+        justifyContent: 'center',
+        width: '100%',
+        height: '50vh',
+        alignItems: 'center',
+      }
+    }
+
+
+  if (error && error?.message && error?.type === 'get' && !loading) {
+    return <div style={styles.errorData}><h2>{error.message}</h2></div>
+  }
+
   return (
       <>
 
        {loading ?
-        <div><h3>Loading ...</h3></div>
+        <div style={styles.loading}><h3>Loading ...</h3></div>
         :
         <>
 
@@ -249,7 +314,7 @@ function App() {
               }
 
               { tab === 'tab3' ?
-                tenants.filter(tenant => isLessThanMonth(tenant.paymentStatus)).map((tenant) =>
+                tenants.filter(tenant => isLessThanMonth(tenant.leaseEndDate)).map((tenant) =>
                 <tr key={tenant.id}>
                    <th>{tenant.id}</th>
                    <td>{tenant.name}</td>
@@ -266,6 +331,19 @@ function App() {
             </tbody>
           </table>
         </div>
+
+
+        { error && error?.message && error?.type !== 'get' ?
+        <div style={styles.error}>
+          <h3 style={styles.h3}>{error.message}</h3>
+
+        </div>
+        :
+        null
+
+      }
+
+
         <div className="container">
           <button 
             className="btn btn-secondary"
@@ -274,6 +352,8 @@ function App() {
           >{isFormVisible ? 'Hide form' : 'Add Tenant'}</button>
 
         </div>
+
+
 
           { isFormVisible ?
 
@@ -309,7 +389,10 @@ function App() {
                     placeholder={`Type with this format ${dayjs().format('DD-MM-YYYY')}`}
                   />
                 </div>
-                <button className="btn btn-primary">Save</button>
+                <button 
+                  disabled={isDisabled} 
+                  className="btn btn-primary"
+                >Save</button>
                 <button onClick={() => showForm(false) } className="btn">Cancel</button>
               </form>
             </div> : null }
