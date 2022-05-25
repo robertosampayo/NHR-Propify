@@ -1,11 +1,20 @@
-import dayjs from 'dayjs';
 import React, { useEffect, useState, useCallback } from 'react';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { Service } from './Service';
+
+dayjs.extend(customParseFormat)
 
 function App() {
 
   const [tab, setTab] = useState('tab1');
   const [tenants, setTenants] = useState([]);
+
+  // form
+  const [isFormVisible, showForm] = useState(false);
+  const [name, setName] = useState('');
+  const [leaseEndDate, setLeaseEndDate] = useState('');
+  const [paymentStatus, setPaymentStatus] = useState('CURRENT');
 
   // error and loading states
   const [error, setError] = useState(null);
@@ -31,7 +40,7 @@ function App() {
   }
 
   function formatDate (date) {
-    const datef = dayjs(date, 'YYYY-MM-DDTHH:mm:ss')
+    const datef =  dayjs(date,'YYYY-MM-DDTHH:mm:ss')
     return dayjs(datef).format('DD-MM-YYYY[ ]HH:mm:ss');
 
   }
@@ -72,6 +81,68 @@ function App() {
 
   if (error && error?.message && error?.type === 'get' && !loading) {
     return <div><h2>{error.message}</h2></div>
+  }
+
+
+  // form values
+
+  function onChangeName (e) {
+    const name = e.target.value;
+    if (name && name.length <= 25) {
+      setName(name);
+    }
+  }
+
+  function onChangePaymentStatus (e) {
+
+    const paymentStatus = e.target.value;
+    if (paymentStatus) {
+      setPaymentStatus(paymentStatus);
+    }
+    
+  }
+
+  function onChangeLeaseEndDate (e) {
+    const leaseEndDate = e.target.value;
+    setLeaseEndDate(leaseEndDate);
+  }
+
+  function cleanForm () {
+    showForm(false);
+    setName('');
+    setPaymentStatus('CURRENT');
+    setLeaseEndDate('');
+
+  }
+
+  const getLastId  = () => {
+    const tenantsCopy = [ ...tenants];
+    let id = 0;
+    tenantsCopy.map(tenant => {
+      if (tenant.id > id) id = tenant.id;
+      return tenant;
+    });
+
+    return id;
+  }
+
+  // Add new tenant
+  async function onSubmitNewTenant (e) { 
+    e.preventDefault();
+    const leaseDate = dayjs(leaseEndDate,'DD-MM-YYYY')
+
+    const newTenant = {
+        id: getLastId() + 1,
+        name: name,
+        paymentStatus: paymentStatus,
+        leaseEndDate: dayjs(leaseDate).format('YYYY-MM-DD[T]HH:mm:ss.SSSZ'),
+
+    }
+
+    setTenants([ ...tenants, newTenant])
+    cleanForm()
+
+
   }
 
   return (
@@ -151,29 +222,55 @@ function App() {
           </table>
         </div>
         <div className="container">
-          <button className="btn btn-secondary">Add Tenant</button>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => showForm(!isFormVisible)}
+          
+          >{isFormVisible ? 'Hide form' : 'Add Tenant'}</button>
+
         </div>
-        <div className="container">
-          <form>
-            <div className="form-group">
-              <label>Name</label>
-              <input className="form-control"/>
-            </div>
-            <div className="form-group">
-              <label>Payment Status</label>
-              <select className="form-control">
-                <option>CURRENT</option>
-                <option>LATE</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Lease End Date</label>
-              <input className="form-control"/>
-            </div>
-            <button className="btn btn-primary">Save</button>
-            <button className="btn">Cancel</button>
-          </form>
-        </div>
+
+          { isFormVisible ?
+
+            <div className="container">
+              <form onSubmit={onSubmitNewTenant}>
+                <div className="form-group">
+                  <label>Name</label>
+                  <input 
+                    id="name"
+                    onChange={onChangeName} 
+                    className="form-control"
+                    value={name}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Payment Status</label>
+                  <select
+                     id='paymentStatus'
+                     className="form-control"
+                     onChange={onChangePaymentStatus}
+                  >
+                    <option value='CURRENT'>CURRENT</option>
+                    <option value='LATE'>LATE</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Lease End Date</label>
+                  <input 
+                    id="leaseEndDate"
+                    onChange={onChangeLeaseEndDate} 
+                    className="form-control"
+                    value={leaseEndDate}
+                    placeholder={`Type with this format ${dayjs().format('DD-MM-YYYY')}`}
+                  />
+                </div>
+                <button className="btn btn-primary">Save</button>
+                <button onClick={() => showForm(false) } className="btn">Cancel</button>
+              </form>
+            </div> : null }
+
+
+
         </>
        }
       </>
