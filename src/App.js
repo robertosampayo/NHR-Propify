@@ -139,11 +139,47 @@ function App() {
 
     }
 
-    setTenants([ ...tenants, newTenant])
-    cleanForm()
+      try {
+        const addedTenant = await Service.addTenant(newTenant);
+      if (addedTenant) {
+        setTenants([ ...tenants, newTenant])
+        cleanForm()
+        setError(null);
+      }
+      
+    } catch (error) {
+      console.error(error);
+      setError({ error : error, message: "Could not add the tenant, please try again.", type: 'add'});
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
+    }
 
 
   }
+
+
+    // Delete tenant
+    async function deleteTenantById (id) {
+
+      try {
+        const deletedTenant = await Service.deleteTenant(id);
+        if (deletedTenant) {
+          setTenants(prevTenant => [ ...prevTenant ].filter(tenant => tenant.id !== id))
+          setError(null);
+        }
+        
+      } catch (error) {
+        console.error(error);
+        setError({ error : error, message: "Could not delete the tenant, please try again.", type: 'delete'});
+  
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
+      }
+  
+  
+    }
 
   return (
       <>
@@ -188,7 +224,10 @@ function App() {
                    <td>{tenant.paymentStatus}</td>
                    <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
-                     <button className="btn btn-danger">Delete</button>
+                     <button
+                       onClick={() => deleteTenantById(tenant.id)}
+                       className="btn btn-danger"
+                      >Delete</button>
                    </td>
                  </tr>) : null
               }
@@ -201,7 +240,10 @@ function App() {
                    <td>{tenant.paymentStatus}</td>
                    <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
-                     <button className="btn btn-danger">Delete</button>
+                     <button                       
+                        onClick={() => deleteTenantById(tenant.id)}
+                         className="btn btn-danger"
+                      >Delete</button>
                    </td>
                  </tr>) : null
               }
@@ -214,7 +256,10 @@ function App() {
                    <td>{tenant.paymentStatus}</td>
                    <td>{formatDate(tenant.leaseEndDate)}</td>
                    <td>
-                     <button className="btn btn-danger">Delete</button>
+                      <button                       
+                        onClick={() => deleteTenantById(tenant.id)}
+                         className="btn btn-danger"
+                      >Delete</button>
                    </td>
                  </tr>) : null
               }
