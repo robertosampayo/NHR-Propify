@@ -1,23 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Service } from './Service';
 
 function App() {
+
+  const [tab, setTab] = useState('tab1');
+  const [tenants, setTenants] = useState([]);
+
+
+  useEffect(() => {
+
+    const fetchTenants = async () => {
+
+      const data = await Service.getTenants();
+      console.log(data);
+      setTenants(data)
+
+    }
+
+    fetchTenants();
+  }, []);
 
   return (
       <>
         <div className="container">
           <h1>Tenants</h1>
+
           <ul className="nav nav-tabs">
-            <li className="nav-item">
-              <a className="nav-link active" href="#">All</a>
+            <li className="nav-item" onClick={(e) => { e.preventDefault(); setTab("tab1")}}>
+              <a className={`nav-link ${tab === 'tab1'? 'active': ''}`} href="/#">All</a>
             </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">Payment is late</a>
+            <li className="nav-item" onClick={(e) => { e.preventDefault(); setTab("tab2")}}>
+              <a className={`nav-link ${tab === 'tab2'? 'active': ''}`} href="/#" >Payment is late</a>
             </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#">Lease ends in less than a month</a>
+            <li className="nav-item" onClick={(e) => { e.preventDefault(); setTab("tab3")}}>
+              <a className={`nav-link ${tab === 'tab3'? 'active': ''}`} href="/#">Lease ends in less than a month</a>
             </li>
           </ul>
+
           <table className="table">
             <thead>
               <tr>
@@ -29,7 +48,7 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              <tr>
+             {/* <tr>
                 <th>1</th>
                 <td>Mark Otto</td>
                 <td>CURRENT</td>
@@ -37,7 +56,43 @@ function App() {
                 <td>
                   <button className="btn btn-danger">Delete</button>
                 </td>
-              </tr>
+              </tr> */}
+
+              { tab === 'tab1' ?
+                <tr>
+                <th>1</th>
+                <td>Mark Otto</td>
+                <td>CURRENT</td>
+                <td>12/31/2020</td>
+                <td>
+                  <button className="btn btn-danger">Delete</button>
+                </td>
+              </tr> : null
+              }
+
+              { tab === 'tab2' ?
+                <tr>
+                <th>2</th>
+                <td>Marcos Alonso</td>
+                <td>CURRENT</td>
+                <td>12/31/2020</td>
+                <td>
+                  <button className="btn btn-danger">Delete</button>
+                </td>
+              </tr> : null
+              }
+
+              { tab === 'tab3' ?
+                <tr>
+                <th>3</th>
+                <td>Julian antonio</td>
+                <td>CURRENT</td>
+                <td>12/31/2020</td>
+                <td>
+                  <button className="btn btn-danger">Delete</button>
+                </td>
+              </tr> : null
+              }
             </tbody>
           </table>
         </div>
