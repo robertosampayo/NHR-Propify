@@ -6,15 +6,30 @@ function App() {
 
   const [tab, setTab] = useState('tab1');
   const [tenants, setTenants] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
 
 
   useEffect(() => {
 
     const fetchTenants = async () => {
 
-      const data = await Service.getTenants();
-      console.log(data);
-      setTenants(data)
+
+
+      try {
+        setLoading(true);
+        const data = await Service.getTenants();
+        setTenants(data);
+        setError(null);
+        setLoading(false);
+      } catch(error) {
+        setLoading(false);
+        setTenants([]);
+        console.error(error);
+        setError({ error : error, message: "There was an error loading the data, please reload the page.", type: 'get'});
+
+        
+      }
 
     }
 
@@ -29,8 +44,18 @@ function App() {
     return leaseIsBeforeOneMOnth;
   }, []);
 
+  if (error && error?.message && error?.type === 'get' && !loading) {
+    return <div><h2>{error.message}</h2></div>
+  }
+
   return (
       <>
+
+       {loading ?
+        <div><h3>Loading ...</h3></div>
+        :
+        <>
+
         <div className="container">
           <h1>Tenants</h1>
 
@@ -57,15 +82,6 @@ function App() {
               </tr>
             </thead>
             <tbody>
-             {/* <tr>
-                <th>1</th>
-                <td>Mark Otto</td>
-                <td>CURRENT</td>
-                <td>12/31/2020</td>
-                <td>
-                  <button className="btn btn-danger">Delete</button>
-                </td>
-              </tr> */}
 
               { tab === 'tab1' ?
                 tenants.map((tenant) =>
@@ -132,6 +148,8 @@ function App() {
             <button className="btn">Cancel</button>
           </form>
         </div>
+        </>
+       }
       </>
   );
 }
